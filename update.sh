@@ -21,6 +21,9 @@ cp -rv PlainObjectInterface/PlainObjectInterface $cwd/src/
 git clone --recursive https://github.com/nuget-pkg/CommonJsonInterface
 cp -rv CommonJsonInterface/CommonJsonInterface $cwd/src/
 
+git clone --recursive https://github.com/nuget-pkg/PlainObjectConverter
+cp -rv PlainObjectConverter/PlainObjectConverter $cwd/src/
+
 git clone --recursive https://github.com/nuget-pkg/JsoncParser
 cp -rv JsoncParser/JsoncParser $cwd/src/
 
@@ -29,3 +32,9 @@ cp -rv EasyObject/EasyObject $cwd/src/
 
 git clone --recursive https://github.com/nuget-pkg/Internals
 cp -rv Internals $cwd/src/
+
+cd $cwd
+rm -rf tmp
+
+cd $cwd/src
+find . -name "*.csproj" -exec rm -rf {} +

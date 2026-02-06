@@ -2,7 +2,7 @@
   <PropertyGroup>
     <OutputType>Library</OutputType>
     <LangVersion>latest</LangVersion>
-    <TargetFramework>net481</TargetFramework>
+    <TargetFramework>net462</TargetFramework>
     <!--<TargetFramework>net9.0</TargetFramework>-->
     <!--<TargetFrameworks>net481;net9.0</TargetFrameworks>-->
     <AssemblyName>MyApi</AssemblyName>
