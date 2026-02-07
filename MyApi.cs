@@ -5,14 +5,14 @@ using System.Collections.Generic;
 using Global;
 using static Global.EasyObject;
 
-public class Class1
-{
-    [DllExport]
-    public static int add2(int a, int b)
-    {
-        return a + b;
-    }
-}
+//public class Class1
+//{
+//    [DllExport]
+//    public static int add2(int a, int b)
+//    {
+//        return a + b;
+//    }
+//}
 
 static class APIHandler
 {
@@ -50,6 +50,22 @@ static class JsonApi
             cmdArgs.Add(args[i].Cast<string>());
         }
         return Sys.RunCommand(exe, cmdArgs.ToArray());
+    }
+    public static int echo(EasyObject args)
+    {
+        if (args.Count < 1) return -1;
+        var x = args[0];
+        string? title = (args.Count >= 2 ? args[1].Cast<string>() : null);
+        Echo(x, title);
+        return 0;
+    }
+    public static int log(EasyObject args)
+    {
+        if (args.Count < 1) return -1;
+        var x = args[0];
+        string? title = (args.Count >= 2 ? args[1].Cast<string>() : null);
+        Log(x, title);
+        return 0;
     }
 }
 
