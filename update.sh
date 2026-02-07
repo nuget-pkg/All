@@ -30,9 +30,6 @@ cp -rv JsoncParser/JsoncParser $cwd/src/
 git clone --recursive https://github.com/nuget-pkg/EasyObject
 cp -rv EasyObject/EasyObject $cwd/src/
 
-git clone --recursive https://github.com/nuget-pkg/Internals
-cp -rv Internals $cwd/src/
-
 cd $cwd
 rm -rf tmp
 
