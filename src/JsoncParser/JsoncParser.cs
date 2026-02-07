@@ -217,7 +217,7 @@ public class JsoncParser
         return result;
     }
     // ReSharper disable once MemberCanBePrivate.Global
-    public static object RuleToObject(Rule rule, bool numberAsDecimal)
+    public static object? RuleToObject(Rule rule, bool numberAsDecimal)
     {
         var rules = SkipUseless(rule.rules);
         if (rule is Rule_json_text)
@@ -269,12 +269,12 @@ public class JsoncParser
         }
         else if (rule is Rule_member)
         {
-            string name = null;
+            string? name = null;
             foreach (var r in rules)
             {
                 //if (r is Rule_string) name = (string)RuleToObject(r, NumberAsDecimal);
                 if (r is Rule_member_name) name = (string)RuleToObject(r, numberAsDecimal);
-                if (r is Rule_value) return new KeyValuePair<string, object>(name, RuleToObject(r, numberAsDecimal));
+                if (r is Rule_value) return new KeyValuePair<string, object>(name!, RuleToObject(r, numberAsDecimal));
             }
         }
         else if (rule is Rule_member_name)

@@ -7,10 +7,11 @@
     <!--<TargetFrameworks>net481;net9.0</TargetFrameworks>-->
     <AssemblyName>MyApi</AssemblyName>
     <RootNamespace>MyApi</RootNamespace>
-    <Nullable>disable</Nullable>
+    <Nullable>enable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
     <Prefer32Bit>false</Prefer32Bit>
-    <WarningsAsErrors>nullable</WarningsAsErrors>
+    <!--<WarningsAsErrors>nullable</WarningsAsErrors>-->
+	  <NoWarn>nullable</NoWarn>
     <Version>0.0.0.0</Version>
   </PropertyGroup>
   <PropertyGroup>

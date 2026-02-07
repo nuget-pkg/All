@@ -17,12 +17,12 @@ public class EasyLanguageParser
         this.numberAsDecimal = numberAsDecimal;
     }
 
-    public object ParseJson(string json)
+    public object? ParseJson(string json)
     {
         return Parse(json, this.numberAsDecimal);
     }
 
-    public static object Parse(string json, bool numberAsDecimal = false)
+    public static object? Parse(string json, bool numberAsDecimal = false)
     {
         if (String.IsNullOrEmpty(json)) return null;
         var context = new ParserContext(json, false);
@@ -220,7 +220,7 @@ public class EasyLanguageParser
         return result;
     }
     // ReSharper disable once MemberCanBePrivate.Global
-    public static object RuleToObject(Rule rule, bool numberAsDecimal)
+    public static object? RuleToObject(Rule rule, bool numberAsDecimal)
     {
         var rules = SkipUseless(rule.rules);
         if (rule is Rule_elang_text)
@@ -346,11 +346,11 @@ public class EasyLanguageParser
         }
         else if (rule is Rule_member)
         {
-            string name = null;
+            string? name = null;
             foreach (var r in rules)
             {
-                if (r is Rule_member_name) name = (string)RuleToObject(r, numberAsDecimal);
-                if (r is Rule_value) return new KeyValuePair<string, object>(name, RuleToObject(r, numberAsDecimal));
+                if (r is Rule_member_name) name = (string?)RuleToObject(r, numberAsDecimal);
+                if (r is Rule_value) return new KeyValuePair<string, object>(name!, RuleToObject(r, numberAsDecimal));
             }
         }
         else if (rule is Rule_member_name)
