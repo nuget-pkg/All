@@ -139,7 +139,7 @@ public class EasyObject :
         EasyObject result = EmptyObject;
         for (int i = 0; i < args.Length; i += 2)
         {
-            result.Add(args[i].ToString(), FromObject(args[i + 1]));
+            result.Add(args[i].ToString()!, FromObject(args[i + 1]));
         }
         return result;
     }
@@ -274,7 +274,7 @@ public class EasyObject :
         return this;
     }
 
-    public EasyObject Add(string key, object x)
+    public EasyObject Add(string key, object? x)
     {
         if (dictionary == null) RealData = new Dictionary<string, EasyObject>();
         EasyObject eo = x is EasyObject ? (x as EasyObject)! : new EasyObject(x);
@@ -293,8 +293,9 @@ public class EasyObject :
             result = assoc;
         }
         if (dictionary == null) return true;
-        EasyObject eo /*= Null*/;
+        EasyObject? eo;
         dictionary.TryGetValue(name, out eo);
+        if (eo == null) eo = Null;
         result = eo;
         return true;
     }
@@ -341,8 +342,9 @@ public class EasyObject :
             result = Null;
             return true;
         }
-        EasyObject eo /*= Null*/;
+        EasyObject? eo /*= Null*/;
         dictionary.TryGetValue((string)idx, out eo);
+        if (eo == null) eo = Null;
         result = eo;
         return true;
     }
@@ -375,7 +377,7 @@ public class EasyObject :
         return true;
     }
 
-    public override bool TryConvert(ConvertBinder binder, out object result)
+    public override bool TryConvert(ConvertBinder binder, out object? result)
     {
         if (binder.Type == typeof(IEnumerable))
         {
@@ -406,7 +408,7 @@ public class EasyObject :
         List<string> lines = new List<string>();
         using (StringReader sr = new StringReader(text))
         {
-            string line;
+            string? line;
             while ((line = sr.ReadLine()) != null)
             {
                 lines.Add(line);
@@ -600,8 +602,9 @@ public class EasyObject :
                 return TryAssoc(name);
             }
             if (dictionary == null) return Null;
-            EasyObject eo /*= null*/;
+            EasyObject? eo;
             dictionary.TryGetValue(name, out eo);
+            if (eo == null) return Null;
             return eo;
         }
         set
@@ -658,9 +661,9 @@ public class EasyObject :
                     s = dt.ToString("o").Replace("Z", "");
                     break;
             }
-            return (T)Convert.ChangeType(s, typeof(T));
+            return (T)Convert.ChangeType(s, typeof(T))!;
         }
-        return (T)Convert.ChangeType(this.RealData, typeof(T));
+        return (T)Convert.ChangeType(this.RealData, typeof(T))!;
     }
     public List<EasyObject>? AsList
     {
@@ -682,7 +685,7 @@ public class EasyObject :
     public static string FullName(dynamic x)
     {
         if (x is null) return "null";
-        string fullName = ((object)x).GetType().FullName;
+        string fullName = ((object)x).GetType().FullName!;
         return fullName!.Split('`')[0];
     }
 
@@ -763,7 +766,7 @@ public class EasyObject :
     public void ImportFromCommonJson(string x)
     {
         var eo = FromJson(x);
-        if (eo != null)
+        if (eo == null)
         {
             eo = Null;
         }
