@@ -5,14 +5,14 @@ using System.Collections.Generic;
 using Global;
 using static Global.EasyObject;
 
-//public class Class1
-//{
-//    [DllExport]
-//    public static int add2(int a, int b)
-//    {
-//        return a + b;
-//    }
-//}
+public class Class1
+{
+    [DllExport]
+    public static int add2(int a, int b)
+    {
+        return a + b;
+    }
+}
 
 static class APIHandler
 {
