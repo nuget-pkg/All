@@ -22,12 +22,6 @@ static class APIHandler
         JsonApiServer jsonAPI = new JsonApiServer();
         return jsonAPI.HandleNativeCall(typeof(JsonApi), nameAddr, inputAddr);
     }
-    [DllExport]
-    public static IntPtr CallBase64(IntPtr nameAddr, IntPtr inputAddr)
-    {
-        JsonApiServer jsonAPI = new JsonApiServer();
-        return jsonAPI.HandleNativeCallBase64(typeof(JsonApi), nameAddr, inputAddr);
-    }
 }
 
 static class JsonApi
