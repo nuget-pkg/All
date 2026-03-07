@@ -1,4 +1,7 @@
-﻿using System;
+﻿// ReSharper disable once CheckNamespace
+namespace Global;
+
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Dynamic;
@@ -6,9 +9,6 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-
-// ReSharper disable once CheckNamespace
-namespace Global;
 
 public enum EasyObjectType
 {
@@ -68,7 +68,7 @@ public class EasyObject :
     IImportFromCommonJson
 {
     public object? RealData /*= null*/;
-    public static readonly bool IsConsoleApplication = HasConsole();
+    //public static readonly bool IsConsoleApplication = HasConsole();
 
     // ReSharper disable once MemberCanBePrivate.Global
     public static readonly IParseJson DefaultJsonParser = new CSharpEasyLanguageHandler(numberAsDecimal: true);
@@ -110,21 +110,16 @@ public class EasyObject :
         return this.ToPrintable();
     }
 
-    public object? ToPlainObject()
+    public string ToPrintable(bool noIndent = false, bool removeSurrogatePair = false)
     {
-        return this.ToObject();
-    }
-
-    public string ToPrintable()
-    {
-        return EasyObject.ToPrintable(this);
+        return EasyObject.ToPrintable(this, noIndent: noIndent, removeSurrogatePair: removeSurrogatePair);
     }
 
     public static EasyObject Null { get { return new EasyObject(); } }
     public static EasyObject EmptyArray { get { return new EasyObject(new List<EasyObject>()); } }
     public static EasyObject EmptyObject { get { return new EasyObject(new Dictionary<string, EasyObject>()); } }
 
-    public static EasyObject NewArray(params object[] args)
+    public static EasyObject NewArray(params object?[] args)
     {
         EasyObject result = EmptyArray;
         for (int i = 0; i < args.Length; i++)
@@ -133,13 +128,14 @@ public class EasyObject :
         }
         return result;
     }
-    public static EasyObject NewObject(params object[] args)
+    public static EasyObject NewObject(params object?[] args)
     {
         if ((args.Length % 2) != 0) throw new ArgumentException("EasyObject.NewObject() requires even number arguments");
         EasyObject result = EmptyObject;
         for (int i = 0; i < args.Length; i += 2)
         {
-            result.Add(args[i].ToString()!, FromObject(args[i + 1]));
+            if (args[i] == null) continue;
+            result.Add(args[i]!.ToString()!, FromObject(args[i + 1]));
         }
         return result;
     }
@@ -266,7 +262,7 @@ public class EasyObject :
         return dictionary.ContainsKey(name);
     }
 
-    public EasyObject Add(object x)
+    public EasyObject Add(object? x)
     {
         if (list == null) RealData = new List<EasyObject>();
         EasyObject eo = x is EasyObject ? (x as EasyObject)! : new EasyObject(x);
@@ -432,9 +428,9 @@ public class EasyObject :
         }
     }
 
-    public static EasyObject? FromJson(string? json, bool ignoreErrors = false)
+    public static EasyObject FromJson(string? json, bool ignoreErrors = false)
     {
-        if (json == null) return null;
+        if (json == null) return Null;
         if (json.StartsWith("#!"))
         {
             string[] lines = TextToLines(json);
@@ -455,18 +451,45 @@ public class EasyObject :
         }
     }
 
-    public dynamic? ToObject()
+    public static EasyObject FromFile(string path, bool ignoreErrors = false)
     {
-        return new PlainObjectConverter(jsonParser: null, forceAscii: ForceAscii).Parse(RealData);
+        return FromJson(File.ReadAllText(path), ignoreErrors: ignoreErrors);
     }
 
-    public string ToJson(bool indent = false, bool sortKeys = false)
+    public dynamic? ToObject(bool asDynamicObject = false)
+    {
+        //return new PlainObjectConverter(jsonParser: null, forceAscii: ForceAscii).Parse(RealData);
+        if (asDynamicObject)
+        {
+            return this.ExportToDynamicObject();
+        }
+        else
+        {
+            return this.ExportToPlainObject();
+        }
+    }
+
+    public string ToJson(bool indent = false, bool sortKeys = false, bool keyAsSymbol = false, bool removeSurrogatePair = false)
     {
         PlainObjectConverter poc = new PlainObjectConverter(jsonParser: JsonParser, forceAscii: ForceAscii);
-        return poc.Stringify(RealData, indent, sortKeys);
+        return poc.Stringify(RealData, indent, sortKeys, keyAsSymbol: keyAsSymbol, removeSurrogatePair: removeSurrogatePair);
     }
 
 #if USE_WINCONSOLE
+    public static bool HasConsole()
+    {
+        try
+        {
+            // Attempt to get a console property
+            int left = Console.CursorLeft;
+            return true;
+        }
+        catch (IOException)
+        {
+            // If an exception is caught, no console is available
+            return false;
+        }
+    }
     // ReSharper disable once MemberCanBePrivate.Global
     public static void AllocConsole()
     {
@@ -487,18 +510,19 @@ public class EasyObject :
     }
 #endif
 
-    public static string ToPrintable(object? x, string? title = null)
+    public static string ToPrintable(object? x, string? title = null, bool noIndent = false, bool removeSurrogatePair = false)
     {
-        //x = FromObject(x).ToObject();
         PlainObjectConverter poc = new PlainObjectConverter(jsonParser: JsonParser, forceAscii: ForceAscii);
-        return poc.ToPrintable(ShowDetail, x, title);
+        return poc.ToPrintable(ShowDetail, x, title, noIndent: noIndent, removeSurrogatePair: removeSurrogatePair);
     }
 
     public static void Echo(
-        object x,
+        object? x,
         string? title = null,
+        bool noIndent = false,
         uint maxDepth = 0,
-        List<string>? hideKeys = null
+        List<string>? hideKeys = null,
+        bool removeSurrogatePair = false
         )
     {
         hideKeys ??= new List<string>();
@@ -510,15 +534,17 @@ public class EasyObject :
                 hideKeys: hideKeys,
                 always: false);
         }
-        string s = ToPrintable(x, title);
+        string s = ToPrintable(x, title, noIndent: noIndent, removeSurrogatePair: removeSurrogatePair);
         Console.WriteLine(s);
         System.Diagnostics.Debug.WriteLine(s);
     }
     public static void Log(
         object? x,
         string? title = null,
+        bool noIndent = false,
         uint maxDepth = 0,
-        List<string>? hideKeys = null
+        List<string>? hideKeys = null,
+        bool removeSurrogatePair = false
         )
     {
         hideKeys ??= new List<string>();
@@ -530,13 +556,14 @@ public class EasyObject :
                 hideKeys: hideKeys,
                 always: false);
         }
-        string s = ToPrintable(x, title);
+        string s = ToPrintable(x, title, noIndent: noIndent, removeSurrogatePair: removeSurrogatePair);
         Console.Error.WriteLine("[Log] " + s);
         System.Diagnostics.Debug.WriteLine("[Log] " + s);
     }
     public static void Debug(
-        object x,
+        object? x,
         string? title = null,
+        bool noIndent = false,
         uint maxDepth = 0,
         List<string>? hideKeys = null
         )
@@ -551,19 +578,20 @@ public class EasyObject :
                 hideKeys: hideKeys,
                 always: false);
         }
-        string s = ToPrintable(x, title);
+        string s = ToPrintable(x, title, noIndent: noIndent);
         Console.Error.WriteLine("[Debug] " + s);
         System.Diagnostics.Debug.WriteLine("[Debug] " + s);
     }
     public static void Message(
-        object x,
+        object? x,
         string? title = null,
+        bool noIndent = false,
         uint maxDepth = 0,
         List<string>? hideKeys = null
         )
     {
         if (title == null) title = "Message";
-        string s = ToPrintable(x, title: title);
+        string s = ToPrintable(x, title: title, noIndent: noIndent);
         NativeMethods.MessageBoxW(IntPtr.Zero, s, title, 0);
     }
 
@@ -682,10 +710,14 @@ public class EasyObject :
         }
     }
 
-    public static string FullName(dynamic x)
+    public static string FullName(dynamic? x)
     {
         if (x is null) return "null";
         string fullName = ((object)x).GetType().FullName!;
+        if (fullName.StartsWith("<>f__AnonymousType"))
+        {
+            return "AnonymousType";
+        }
         return fullName!.Split('`')[0];
     }
 
@@ -717,7 +749,7 @@ public class EasyObject :
             List<string>? hideKeys = null
         )
     {
-        EasyObjectEditor.Trim( this, maxDepth, hideKeys );
+        EasyObjectEditor.Trim(this, maxDepth, hideKeys);
     }
 
     public EasyObject Clone(
@@ -738,22 +770,94 @@ public class EasyObject :
         return result;
     }
 
-    public object? ExportToPlainObject()
+    public EasyObject Shuffle()
     {
-        return this.ToObject();
-    }
-    public static bool HasConsole()
-    {
-        try
+        if (this.list != null)
         {
-            // Attempt to get a console property
-            int left = Console.CursorLeft;
-            return true;
+            var list2 = this.list!.Select(i => i).OrderBy(i => Guid.NewGuid()).ToList();
+            return FromObject(list2);
         }
-        catch (IOException)
+        if (this.dictionary != null)
         {
-            // If an exception is caught, no console is available
-            return false;
+            var keys = this.dictionary.Keys!.Select(i => i).OrderBy(i => Guid.NewGuid()).ToList();
+            var result = NewObject();
+            foreach (var key in keys)
+            {
+                result[key] = this.dictionary[key];
+            }
+            return result;
+        }
+        return this.Clone();
+    }
+
+    public EasyObject Skip(int n)
+    {
+        if (this.list != null)
+        {
+            var list2 = this.list!.Select(i => i).Skip(n).ToList();
+            return FromObject(list2);
+        }
+        if (this.dictionary != null)
+        {
+            var keys = this.dictionary.Keys!.Select(i => i).Skip(n).ToList();
+            var result = NewObject();
+            foreach (var key in keys)
+            {
+                result[key] = this.dictionary[key];
+            }
+            return result;
+        }
+        return this.Clone();
+    }
+
+    public EasyObject Take(int n)
+    {
+        if (this.list != null)
+        {
+            var list2 = this.list!.Select(i => i).Take(n).ToList();
+            return FromObject(list2);
+        }
+        if (this.dictionary != null)
+        {
+            var keys = this.dictionary.Keys!.Select(i => i).Take(n).ToList();
+            var result = NewObject();
+            foreach (var key in keys)
+            {
+                result[key] = this.dictionary[key];
+            }
+            return result;
+        }
+        return this.Clone();
+    }
+
+    public string[] AsStringArray
+    {
+        get
+        {
+            if (this.list != null)
+            {
+                return
+                    this.list!
+                    .Select(
+                        i =>
+                        i.IsString ?
+                        i.Cast<string>() :
+                        i.ToJson(keyAsSymbol: true, indent: false))
+                    .ToArray();
+            }
+            if (this.dictionary != null)
+            {
+                return this.dictionary.Keys!.Select(i => i).ToArray();
+            }
+            return [];
+        }
+    }
+
+    public List<string> AsStringList
+    {
+        get
+        {
+            return this.AsStringArray.ToList();
         }
     }
 
@@ -779,5 +883,21 @@ public class EasyObject :
             indent: true,
             sortKeys: false
             );
+    }
+    public object? ExportToPlainObject()
+    {
+        return new PlainObjectConverter(jsonParser: null, forceAscii: ForceAscii).Parse(RealData);
+    }
+    public dynamic? ExportToDynamicObject()
+    {
+        return EasyObjectEditor.ExportToExpandoObject(this);
+    }
+    public static string ObjectToJson(object? x, bool indent = false)
+    {
+        return FromObject(x).ToJson(indent: indent); ;
+    }
+    public static object? ObjectToObject(object? x, bool asDynamicObject = false)
+    {
+        return FromObject(x).ToObject(asDynamicObject: asDynamicObject);
     }
 }
